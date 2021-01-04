@@ -1,9 +1,10 @@
 import got from 'got'
 import qs from 'qs'
 import {
-  BlobServiceClient,
+  // BlobServiceClient,
   AnonymousCredential,
-  newPipeline
+  newPipeline,
+  BlockBlobClient
 } from '@azure/storage-blob'
 
 /**
@@ -997,18 +998,9 @@ class Intune {
       bufferSize = 1 * 1024
     }
 
-    // Parse Storage URI
-    const parseURL = new URL(azureStorageUri)
-    const azureStorageUriArray = azureStorageUri.split('/')
-    const sasUrl = `${parseURL.origin}${parseURL.search}`
-    const blobContainer = `${azureStorageUriArray[3]}`
-    const blobName = parseURL.pathname.replace(`/${blobContainer}/`, '')
-
     // Azure Upload
     const pipeline = newPipeline(new AnonymousCredential())
-    const blobServiceClient = new BlobServiceClient(sasUrl, pipeline)
-    const containerClient = blobServiceClient.getContainerClient(blobContainer)
-    const blockBlobClient = containerClient.getBlockBlobClient(blobName)
+    const blockBlobClient = new BlockBlobClient(azureStorageUri, pipeline)
     let uploadBlobResponse: object = {}
     if (typeof statusCallback !== 'undefined') {
       uploadBlobResponse = await blockBlobClient.uploadStream(
@@ -1022,9 +1014,7 @@ class Intune {
       )
     } else {
       uploadBlobResponse = await blockBlobClient.uploadStream(
-        file,
-        bufferSize,
-        5
+        file
       )
     }
     return uploadBlobResponse
